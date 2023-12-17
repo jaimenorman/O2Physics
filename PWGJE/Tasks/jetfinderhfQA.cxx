@@ -625,7 +625,6 @@ struct JetFinderHFQATask {
     fillTrackHistograms(tracks, eventWeight);
   }
   PROCESS_SWITCH(JetFinderHFQATask, processTracksWeighted, "QA for charged tracks weighted", false);
-
 };
 
 using JetFinderD0QATask = JetFinderHFQATask<aod::D0ChargedJets, aod::D0ChargedJetConstituents, soa::Join<aod::HfCand2Prong, aod::HfSelD0>, aod::D0ChargedMCDetectorLevelJets, aod::D0ChargedMCDetectorLevelJetConstituents, aod::D0ChargedMCDetectorLevelJetsMatchedToD0ChargedMCParticleLevelJets, aod::D0ChargedMCDetectorLevelJetEventWeights, soa::Join<aod::HfCand2Prong, aod::HfSelD0, aod::HfCand2ProngMcRec>, aod::D0ChargedMCParticleLevelJets, aod::D0ChargedMCParticleLevelJetConstituents, aod::D0ChargedMCParticleLevelJetsMatchedToD0ChargedMCDetectorLevelJets, aod::D0ChargedMCParticleLevelJetEventWeights, soa::Join<aod::McParticles, aod::HfCand2ProngMcGen>>;
