@@ -72,6 +72,7 @@ struct JetFinderQATask {
   Configurable<bool> checkMcCollisionIsMatched{"checkMcCollisionIsMatched", false, "0: count whole MCcollisions, 1: select MCcollisions which only have their correspond collisions"};
   Configurable<int> trackOccupancyInTimeRangeMax{"trackOccupancyInTimeRangeMax", 999999, "maximum occupancy of tracks in neighbouring collisions in a given time range; only applied to reconstructed collisions (data and mcd jets), not mc collisions (mcp jets)"};
   Configurable<int> trackOccupancyInTimeRangeMin{"trackOccupancyInTimeRangeMin", -999999, "minimum occupancy of tracks in neighbouring collisions in a given time range; only applied to reconstructed collisions (data and mcd jets), not mc collisions (mcp jets)"};
+  Configurable<bool> isMB{"isMB", false, "flag to choose events based on weight (MB = 1, weighted = anything else"};
 
   std::vector<bool> filledJetR_Both;
   std::vector<bool> filledJetR_Low;
@@ -828,6 +829,9 @@ struct JetFinderQATask {
       if (!isAcceptedJet<JetTracks>(jet)) {
         continue;
       }
+      if(jet.eventWeight()==1) {
+        continue;
+      }
       double pTHat = 10. / (std::pow(jet.eventWeight(), 1.0 / pTHatExponent));
       for (int N = 1; N < 21; N++) {
         if (jet.pt() < N * 0.25 * pTHat && jet.r() == round(selectedJetsRadius * 100.0f)) {
@@ -864,6 +868,9 @@ struct JetFinderQATask {
       return;
     }
     if (!isAcceptedJet<JetParticles>(jet)) {
+      return;
+    }
+    if(jet.eventWeight()==1) {
       return;
     }
     double pTHat = 10. / (std::pow(jet.eventWeight(), 1.0 / pTHatExponent));
@@ -918,6 +925,9 @@ struct JetFinderQATask {
       if (!isAcceptedJet<JetTracks>(mcdjet)) {
         continue;
       }
+      if(mcdjet.eventWeight()==1) {
+        continue;
+      }
       fillMatchedHistograms<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights>::iterator, soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents, aod::ChargedMCParticleLevelJetsMatchedToChargedMCDetectorLevelJets, aod::ChargedMCParticleLevelJetEventWeights>>(mcdjet, mcdjet.eventWeight());
     }
   }
@@ -925,6 +935,9 @@ struct JetFinderQATask {
 
   void processMCCollisionsWeighted(JetMcCollision const& collision)
   {
+    if(collision.weight()==1) {
+      return;
+    }
     registry.fill(HIST("h_collision_eventweight_part"), collision.weight());
   }
   PROCESS_SWITCH(JetFinderQATask, processMCCollisionsWeighted, "collision QA for weighted events", false);
@@ -1055,9 +1068,14 @@ struct JetFinderQATask {
   }
   PROCESS_SWITCH(JetFinderQATask, processTriggeredData, "QA for charged jet trigger", false);
 
-  void processTracks(soa::Filtered<JetCollisions>::iterator const& collision,
-                     soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras>> const& tracks)
+  void processTracks(soa::Join<JetCollisions, aod::JMcCollisionLbs>::iterator const& collision,
+                             JetMcCollisions const&,
+                             soa::Filtered<JetTracks> const& tracks)
   {
+    float eventWeight = collision.mcCollision().weight();
+    if(eventWeight!=1) {
+      return;
+    }
     registry.fill(HIST("h_collisions"), 0.5);
     registry.fill(HIST("h2_centrality_collisions"), collision.centrality(), 0.5);
     if (!jetderiveddatautilities::selectCollision(collision, eventSelection)) {
@@ -1079,6 +1097,9 @@ struct JetFinderQATask {
                              soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras>> const& tracks)
   {
     float eventWeight = collision.mcCollision().weight();
+    if(eventWeight==1) {
+      return;
+    }
     registry.fill(HIST("h_collisions"), 0.5);
     registry.fill(HIST("h_collisions_weighted"), 0.5, eventWeight);
     if (!jetderiveddatautilities::selectCollision(collision, eventSelection)) {
