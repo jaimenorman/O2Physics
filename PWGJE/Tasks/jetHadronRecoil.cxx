@@ -479,7 +479,7 @@ struct hJetAnalysis {
                           soa::Filtered<soa::Join<aod::Charged1MCParticleLevelJets, aod::Charged1MCParticleLevelJetConstituents, aod::Charged1MCParticleLevelJetsMatchedToChargedMCParticleLevelJets>> const& jetsWTA,
                           JetParticles const& particles)
   {
-    if (nabs(collision.posZ()) > vertexZCut) { 
+    if (nabs(collision.posZ()) > vertexZCut) {
       return;
     }
     registry.fill(HIST("hZvtxSelected"), collision.posZ(), collision.weight());
