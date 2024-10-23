@@ -531,7 +531,7 @@ struct JetFinderQATask {
 
         for (int N = 1; N < 21; N++) {
           if (jetBase.pt() < N * 0.25 * pTHat && jetTag.pt() < N * 0.25 * pTHat) {
-            registry.fill(HIST("h3_ptcut_jet_pt_tag_jet_pt_base_matchedgeo"), N * 0.25,  jetTag.pt(), jetBase.pt(), weight);
+            registry.fill(HIST("h3_ptcut_jet_pt_tag_jet_pt_base_matchedgeo"), N * 0.25, jetTag.pt(), jetBase.pt(), weight);
           }
         }
 
