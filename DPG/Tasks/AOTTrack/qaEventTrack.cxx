@@ -61,6 +61,7 @@ struct qaEventTrack {
   Configurable<bool> isRun3{"isRun3", true, "Is Run3 dataset"}; // TODO: derive this from metadata once possible to get rid of the flag
   Configurable<bool> overwriteAxisRangeForPbPb{"overwriteAxisRangeForPbPb", false, "Global switch to easily set the most relaxed default axis ranges of multiplicity and PVcontribs for PbPb"};
   Configurable<bool> doDebug{"doDebug", false, "Bool to enable debug outputs"};
+  Configurable<bool> isMB{"isMB", false, "Bool to enable or disable MB"};
 
   // options to select specific events
   Configurable<bool> selectGoodEvents{"selectGoodEvents", true, "select good events"};
