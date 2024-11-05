@@ -151,9 +151,18 @@ struct JetFinderQATask {
       registry.add("h3_jet_r_jet_pt_track_phi", "#it{R}_{jet};#it{p}_{T,jet} (GeV/#it{c});#varphi_{jet tracks}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {160, -1.0, 7.}}});
       registry.add("h3_jet_r_jet_pt_leadingtrack_pt", "#it{R}_{jet};#it{p}_{T,jet} (GeV/#it{c}); #it{p}_{T,leading track} (GeV/#it{c})", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {200, 0.0, 200.0}}});
       registry.add("h_jet_phat", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
+      registry.add("h_matched_phat", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
       registry.add("h_jet_ptcut", "p_{T} cut;p_{T,jet} (GeV/#it{c});N;entries", {HistType::kTH2F, {{300, 0, 300}, {20, 0, 5}}});
       registry.add("h_jet_phat_weighted", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
       registry.add("h3_centrality_occupancy_jet_pt", "centrality; occupancy; #it{p}_{T,jet} (GeV/#it{c})", {HistType::kTH3F, {{120, -10.0, 110.0}, {60, 0, 30000}, jetPtAxis}});
+      registry.add("h3_jet_pt_track_pt_pt_hat_ambiguous", "ambiguous;#it{p}_{T,jet} (GeV/#it{c});#it{p}_{T,track} (GeV/#it{c}); #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {100,0,100}, {200,0,600}}});
+      registry.add("h3_jet_pt_track_pt_pt_hat_unambiguous", "matched;#it{p}_{T,jet} (GeV/#it{c});#it{p}_{T,track} (GeV/#it{c}); #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {100,0,100}, {200,0,600}}});
+      registry.add("h3_jet_pt_frac_pt_ambiguous_pt_hat", "fraction pT;#it{p}_{T,jet} (GeV/#it{c});fraction of #it{p}_{T,track} unmatched; #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {40,0,1.1}, {200,0,600}}});
+      registry.add("h3_jet_pt_frac_constituents_ambiguous_pt_hat", "fraction const;#it{p}_{T,jet} (GeV/#it{c});fraction of constituents matched; #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {40,0,1.1}, {200,0,600}}});
+      registry.add("h3_jet_pt_track_pt_pt_hat_no_particle", "no matching particle;#it{p}_{T,jet} (GeV/#it{c});#it{p}_{T,track} (GeV/#it{c}); #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {100,0,100}, {200,0,600}}});
+      registry.add("h3_jet_pt_track_pt_pt_hat_with_particle", "with matching particle;#it{p}_{T,jet} (GeV/#it{c});#it{p}_{T,track} (GeV/#it{c}); #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {100,0,100}, {200,0,600}}});
+      registry.add("h3_jet_pt_frac_pt_unmatched_particle_pt_hat", "fraction pT;#it{p}_{T,jet} (GeV/#it{c});fraction of #it{p}_{T,track} unmatched; #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {40,0,1.1}, {200,0,600}}});
+      registry.add("h3_jet_pt_frac_constituents_unmatched_particle_pt_hat", "fraction const;#it{p}_{T,jet} (GeV/#it{c});fraction of constituents unmatched; #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH3F, {{150,0,300}, {40,0,1.1}, {200,0,600}}});
     }
 
     if (doprocessJetsRhoAreaSubData || doprocessJetsRhoAreaSubMCD) {
@@ -312,6 +321,8 @@ struct JetFinderQATask {
       if (doprocessTracksWeighted) {
         registry.add("h_collisions_weighted", "event status;event status;entries", {HistType::kTH1F, {{4, 0.0, 4.0}}});
       }
+      registry.add("h_track_pt_no_collision", "no collision;p_{T,track} (GeV/#it{c});entries", {HistType::kTH1F, {{300, 0, 300}}});
+      registry.add("h_track_pt_collision", "collision;p_{T,track} (GeV/#it{c});entries", {HistType::kTH1F, {{300, 0, 300}}});
     }
     if (doprocessTracksSub) {
       registry.add("h3_centrality_track_pt_track_phi_eventwiseconstituentsubtracted", "centrality vs track pT vs track #varphi; centrality; #it{p}_{T,track} (GeV/#it{c}); #varphi_{track}", {HistType::kTH3F, {{1200, -10.0, 110.0}, {200, 0., 200.}, {160, -1.0, 7.}}});
@@ -407,12 +418,100 @@ struct JetFinderQATask {
     registry.fill(HIST("h3_jet_r_jet_pt_jet_ntracks"), jet.r() / 100.0, jet.pt(), jet.tracksIds().size(), weight);
     registry.fill(HIST("h3_jet_r_jet_pt_jet_area"), jet.r() / 100.0, jet.pt(), jet.area(), weight);
 
-    for (auto& constituent : jet.template tracks_as<JetTracks>()) {
+    for (auto& constituent : jet.template tracks_as<JetTracksMCD>()) {
 
       registry.fill(HIST("h3_jet_r_jet_pt_track_pt"), jet.r() / 100.0, jet.pt(), constituent.pt(), weight);
       registry.fill(HIST("h3_jet_r_jet_pt_track_eta"), jet.r() / 100.0, jet.pt(), constituent.eta(), weight);
       registry.fill(HIST("h3_jet_r_jet_pt_track_phi"), jet.r() / 100.0, jet.pt(), constituent.phi(), weight);
     }
+  }
+  template <typename T, typename U>
+  void fillHistogramsAmbiguous(T const& jet, float weight = 1.0, U const& tracksAmbiguous = 0x0)
+  {
+    // take method from qaEventTrack.cxx
+
+    float pTHat = 10. / (std::pow(weight, 1.0 / pTHatExponent));
+    if (jet.pt() > pTHatMaxMCD * pTHat) {
+      return;
+    }
+    if (jet.r() == round(selectedJetsRadius * 100.0f)) {
+     // registry.fill(HIST("h_jet_pt"), jet.pt(), weight);
+    }
+
+
+    // test
+    //LOG(info) << "================================";
+    //LOG(info) << "=== soa::Filtered<TrackTableData> const& tracks, size=" << jet.template tracks_as<JetTracks>().size();
+    //int iTrack = 0;
+    //for (auto& t : jet.template tracks_as<JetTracks>()) {
+    //  LOG(info) << "[" << iTrack << "] .index()=" << t.index() << ", .globalIndex()=" << t.globalIndex();
+    //  iTrack++;
+    //}
+    //LOG(info) << "=== aod::AmbiguousTracks const& ambitracks, size=" << tracksAmbiguous.size();
+    //int iTrackAmbi = 0;
+    //for (auto& tamb : tracksAmbiguous) {
+    //  LOG(info) << "[" << iTrackAmbi << "] .index()=" << tamb.index() << ", .globalIndex()=" << tamb.globalIndex() << ", .trackId()=" << tamb.trackId();
+    //  iTrackAmbi++;
+    //}
+    //LOG(info) << "================================";
+
+
+    auto iterAmbiguous = tracksAmbiguous.begin();
+    bool searchAmbiguous = true;
+    int nAmbTracks = 0;
+    int nUnmatchedTracks = 0;
+    double pt_total = 0;
+    double pt_amb = 0;
+    double pt_unmatched = 0;
+    //LOG(info) << "===== constituent.size()=" << jet.template tracks_as<JetTracks>().size() << ", tracksAmbiguous.size()=" << tracksAmbiguous.size();
+    for (auto& constituent : jet.template tracks_as<JetTracksMCD>()) {
+      pt_total += constituent.pt();
+      if(!constituent.has_collision()) {
+        LOG(info) << "NO COLLISION : track.index()=" << constituent.index() << " track.globalIndex()=" << constituent.globalIndex();
+      }
+      bool has_MCparticle = constituent.has_mcParticle();
+      if(!has_MCparticle) {
+        //LOG(info) << "constituent NO MC PARTICLE: track.index()=" << constituent.index() << " track.globalIndex()=" << constituent.globalIndex();
+        registry.fill(HIST("h3_jet_pt_track_pt_pt_hat_no_particle"), jet.pt(), constituent.pt(), pTHat, weight);
+        pt_unmatched += constituent.pt();
+        nUnmatchedTracks++;
+      }
+      else {
+        //LOG(info) << "constituent HAS MC PARTICLE: track.index()=" << constituent.index() << " track.globalIndex()=" << constituent.globalIndex();
+        registry.fill(HIST("h3_jet_pt_track_pt_pt_hat_with_particle"), jet.pt(), constituent.pt(), pTHat, weight);
+      }
+
+
+      bool goFillHisto = (iterAmbiguous != tracksAmbiguous.end());
+      if (goFillHisto) {
+        while (constituent.globalIndex() > iterAmbiguous.trackId()) {
+          //LOG(info) << "track.index()=" << constituent.index() << " track.globalIndex()=" << constituent.globalIndex() << " ||| iterAmbiguous.trackId()=" << iterAmbiguous.trackId() << ", iterAmbiguous.globalIndex()=" << iterAmbiguous.globalIndex();
+          iterAmbiguous++;
+          if (iterAmbiguous == tracksAmbiguous.end()) { /// all ambiguous tracks found
+            searchAmbiguous = false;
+            goFillHisto = false;
+            break;
+          }
+        }
+      }
+      if (goFillHisto) {
+        if (constituent.globalIndex() == iterAmbiguous.trackId()) {
+          nAmbTracks++;
+          //LOG(info) << "   >>> FOUND AMBIGUOUS TRACK! track.index()=" << constituent.index() << " track.globalIndex()=" << constituent.globalIndex() << " ||| iterAmbiguous.trackId()=" << iterAmbiguous.trackId() << ", iterAmbiguous.globalIndex()=" << iterAmbiguous.globalIndex();
+          registry.fill(HIST("h3_jet_pt_track_pt_pt_hat_ambiguous"), jet.pt(), constituent.pt(), pTHat, weight);
+          pt_amb += constituent.pt();
+          nAmbTracks++;
+        }
+        else {
+          registry.fill(HIST("h3_jet_pt_track_pt_pt_hat_unambiguous"), jet.pt(), constituent.pt(), pTHat, weight);
+        }
+      }
+    }
+    registry.fill(HIST("h3_jet_pt_frac_pt_ambiguous_pt_hat"), jet.pt(), pt_amb/pt_total, pTHat, weight);
+    registry.fill(HIST("h3_jet_pt_frac_constituents_ambiguous_pt_hat"), jet.pt(), double(nAmbTracks)/double(jet.template tracks_as<JetTracksMCD>().size()), pTHat, weight);
+
+    registry.fill(HIST("h3_jet_pt_frac_pt_unmatched_particle_pt_hat"), jet.pt(), pt_unmatched/pt_total, pTHat, weight);
+    registry.fill(HIST("h3_jet_pt_frac_constituents_unmatched_particle_pt_hat"), jet.pt(), double(nUnmatchedTracks)/double(jet.template tracks_as<JetTracksMCD>().size()), pTHat, weight);
   }
 
   template <typename T>
@@ -541,6 +640,7 @@ struct JetFinderQATask {
           registry.fill(HIST("h3_jet_pt_tag_jet_ntracks_tag_jet_ntracks_base_matchedgeo"), jetTag.pt(), jetTag.tracksIds().size(), jetBase.tracksIds().size(), weight);
         }
       }
+      registry.fill(HIST("h_matched_phat"),pTHat);
     }
     if (jetBase.has_matchedJetPt()) {
       for (auto& jetTag : jetBase.template matchedJetPt_as<std::decay_t<U>>()) {
@@ -593,6 +693,23 @@ struct JetFinderQATask {
   void fillTrackHistograms(T const& collision, U const& tracks, float weight = 1.0)
   {
     for (auto const& track : tracks) {
+      //LOG(info) << " track.has_collision() = " << track.has_collision() << " track.collisionId() = "<< track.collisionId() << " collision.globalIndex() = " << collision.globalIndex(); 
+      if(!track.has_collision() || track.collisionId() != collision.globalIndex()) {
+        LOG(info) << "NO COLLISION : track.index()=" << track.index() << " track.globalIndex()=" << track.globalIndex();
+        registry.fill(HIST("h_track_pt_no_collision"),  track.pt(), weight);
+      }
+      else {
+        registry.fill(HIST("h_track_pt_collision"),  track.pt(), weight);
+      }
+      bool has_MCparticle = track.has_mcParticle();
+      if(!has_MCparticle) {
+        // not implemented ATM, could be added to also check tracks though if using same track selection, should be consistent with jet constituents
+        //LOG(info) << "NO MC PARTICLE: track.index()=" << track.index() << " track.globalIndex()=" << track.globalIndex();
+      }
+      else {
+        //LOG(info) << "HAS MC PARTICLE: track.index()=" << track.index() << " track.globalIndex()=" << track.globalIndex();
+      }
+
       if (!jetderiveddatautilities::selectTrack(track, trackSelection)) {
         continue;
       }
@@ -799,7 +916,7 @@ struct JetFinderQATask {
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsSubMatched, "jet finder QA matched unsubtracted and constituent subtracted jets", false);
 
-  void processJetsMCD(soa::Filtered<JetCollisions>::iterator const& collision, soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents> const& jets, JetTracks const&)
+  void processJetsMCD(soa::Filtered<JetCollisions>::iterator const& collision, soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents> const& jets, JetTracksMCD const&, const aod::AmbiguousTracks& tracksAmbiguous)
   {
     if (collision.trackOccupancyInTimeRange() < trackOccupancyInTimeRangeMin || trackOccupancyInTimeRangeMax < collision.trackOccupancyInTimeRange()) {
       return;
@@ -812,11 +929,12 @@ struct JetFinderQATask {
         continue;
       }
       fillHistograms(jet, collision.centrality(), collision.trackOccupancyInTimeRange());
+      fillHistogramsAmbiguous(jet, 1., tracksAmbiguous);
     }
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsMCD, "jet finder QA mcd", false);
 
-  void processJetsMCDWeighted(soa::Filtered<JetCollisions>::iterator const& collision, soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetEventWeights> const& jets, JetTracks const&)
+  void processJetsMCDWeighted(soa::Filtered<JetCollisions>::iterator const& collision, soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetEventWeights> const& jets, JetTracksMCD const&, const aod::AmbiguousTracks& tracksAmbiguous)
   {
     if (collision.trackOccupancyInTimeRange() < trackOccupancyInTimeRangeMin || trackOccupancyInTimeRangeMax < collision.trackOccupancyInTimeRange()) {
       return;
@@ -835,6 +953,7 @@ struct JetFinderQATask {
         }
       }
       fillHistograms(jet, collision.centrality(), collision.trackOccupancyInTimeRange(), jet.eventWeight());
+      fillHistogramsAmbiguous(jet, jet.eventWeight(), tracksAmbiguous);
     }
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsMCDWeighted, "jet finder QA mcd with weighted events", false);
@@ -1056,7 +1175,7 @@ struct JetFinderQATask {
   PROCESS_SWITCH(JetFinderQATask, processTriggeredData, "QA for charged jet trigger", false);
 
   void processTracks(soa::Filtered<JetCollisions>::iterator const& collision,
-                     soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras>> const& tracks)
+                     soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras, aod::JMcTrackLbs>> const& tracks)
   {
     registry.fill(HIST("h_collisions"), 0.5);
     registry.fill(HIST("h2_centrality_collisions"), collision.centrality(), 0.5);
@@ -1076,7 +1195,7 @@ struct JetFinderQATask {
 
   void processTracksWeighted(soa::Join<JetCollisions, aod::JMcCollisionLbs>::iterator const& collision,
                              JetMcCollisions const&,
-                             soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras>> const& tracks)
+                             soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras, aod::JMcTrackLbs>> const& tracks)
   {
     float eventWeight = collision.mcCollision().weight();
     registry.fill(HIST("h_collisions"), 0.5);
