@@ -1070,7 +1070,7 @@ struct JetFinderQATask {
 
   void processTracks(soa::Join<JetCollisions, aod::JMcCollisionLbs>::iterator const& collision,
                              JetMcCollisions const&,
-                             soa::Filtered<JetTracks> const& tracks)
+                             soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras>> const& tracks)
   {
     float eventWeight = collision.mcCollision().weight();
     if(eventWeight!=1) {
