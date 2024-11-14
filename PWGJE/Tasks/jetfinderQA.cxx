@@ -46,6 +46,8 @@ struct JetFinderQATask {
 
   HistogramRegistry registry;
 
+  Preslice<JetTracks> perCol = aod::jtrack::collisionId;
+
   Configurable<float> selectedJetsRadius{"selectedJetsRadius", 0.4, "resolution parameter for histograms without radius"};
   Configurable<std::string> eventSelections{"eventSelections", "sel8", "choose event selection"};
   Configurable<float> vertexZCut{"vertexZCut", 10.0f, "Accepted z-vertex range"};
@@ -336,6 +338,11 @@ struct JetFinderQATask {
     if (doprocessMCCollisionsWeighted) {
       AxisSpec weightAxis = {{VARIABLE_WIDTH, 1e-13, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0}, "weights"};
       registry.add("h_collision_eventweight_part", "event weight;event weight;entries", {HistType::kTH1F, {weightAxis}});
+    }
+    if (doprocessTracksColl) {
+      registry.add("h_collisions_loop", "weight", {HistType::kTH1F, {{2, 0., 2.}}});
+      registry.add("h_track_loop", "weight", {HistType::kTH1F, {{2, 0., 2.}}});
+      registry.add("h_track_pt_loop", "weight track pt", {HistType::kTH1F, {{200, 0., 200.}}});
     }
   }
 
@@ -938,6 +945,46 @@ struct JetFinderQATask {
     }
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsMCD, "jet finder QA mcd", false);
+
+  void processTracksColl(soa::Join<JetCollisions, aod::JMcCollisionLbs> const& collisions, 
+      JetMcCollisions const&,
+      JetTracks const& tracks)
+  {
+    for (auto const& collision : collisions) {
+
+      registry.fill(HIST("h_collisions_loop"), 0.5);
+      if (!jetderiveddatautilities::selectCollision(collision, eventSelection)) {
+        return;
+      }
+      registry.fill(HIST("h_collisions_loop"), 1.5);
+      if (collision.trackOccupancyInTimeRange() < trackOccupancyInTimeRangeMin || trackOccupancyInTimeRangeMax < collision.trackOccupancyInTimeRange()) {
+        return;
+      }
+      float eventWeight = collision.mcCollision().weight();
+      const auto tracksColl = tracks.sliceBy(perCol, collision.globalIndex());
+      LOG(info) << "coll index = " << collision.globalIndex();
+      LOG(info) << "n tracks = " << tracksColl.size();
+      for (auto const& track : tracksColl) {
+
+        registry.fill(HIST("h_track_loop"), 0.5);
+        if (!jetderiveddatautilities::selectTrack(track, trackSelection)) {
+          continue;
+        }
+        registry.fill(HIST("h_track_loop"), 1.5);
+
+        registry.fill(HIST("h_track_pt_loop"), track.pt());
+      }
+      // soa::Join<JetCollisions, aod::JMcCollisionLbs>::iterator const&
+    }
+  }
+  PROCESS_SWITCH(JetFinderQATask, processTracksColl, "jet finder QA mcd", false);
+
+//    /// work with collision grouping
+//  for (auto const& collision : collisions) {
+//    const auto& tracksColl = tracks.sliceBy(perRecoCollision, collision.globalIndex());
+//    const auto& tracksUnfilteredColl = tracksUnfiltered.sliceBy(perRecoCollision, collision.globalIndex());
+//    fillRecoHistogramsGroupedTracks<false>(collision, tracksColl, tracksUnfilteredColl);
+//  }
 
   void processJetsMCDWeighted(soa::Filtered<JetCollisions>::iterator const& collision, soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetEventWeights> const& jets, JetTracksMCD const&, const aod::AmbiguousTracks& tracksAmbiguous)
   {
