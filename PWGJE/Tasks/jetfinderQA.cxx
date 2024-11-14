@@ -150,6 +150,7 @@ struct JetFinderQATask {
       registry.add("h3_jet_r_jet_pt_track_pt", "#it{R}_{jet};#it{p}_{T,jet} (GeV/#it{c});#it{p}_{T,jet tracks} (GeV/#it{c})", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {200, 0., 200.}}});
       registry.add("h3_jet_r_jet_pt_track_eta", "#it{R}_{jet};#it{p}_{T,jet} (GeV/#it{c});#eta_{jet tracks}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, trackEtaAxis}});
       registry.add("h3_jet_r_jet_pt_track_phi", "#it{R}_{jet};#it{p}_{T,jet} (GeV/#it{c});#varphi_{jet tracks}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {160, -1.0, 7.}}});
+      registry.add("h3_jet_r_jet_pt_Dz", "#it{R}_{jet};#it{p}_{T,jet} (GeV/#it{c});z = #it{p}_{T,track} / #it{p}_{T,jet}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {30, 0., 1.}}});
       registry.add("h3_jet_r_jet_pt_leadingtrack_pt", "#it{R}_{jet};#it{p}_{T,jet} (GeV/#it{c}); #it{p}_{T,leading track} (GeV/#it{c})", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {200, 0.0, 200.0}}});
       registry.add("h_jet_phat", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
       registry.add("h_matched_phat", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
@@ -237,6 +238,7 @@ struct JetFinderQATask {
       registry.add("h3_jet_r_part_jet_pt_part_track_pt_part", "#it{R}_{jet}^{part};#it{p}_{T,jet}^{part} (GeV/#it{c});#it{p}_{T,jet tracks}^{part} (GeV/#it{c})", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {200, 0., 200.}}});
       registry.add("h3_jet_r_part_jet_pt_part_track_eta_part", "#it{R}_{jet}^{part};#it{p}_{T,jet}^{part} (GeV/#it{c});#eta_{jet tracks}^{part}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, trackEtaAxis}});
       registry.add("h3_jet_r_part_jet_pt_part_track_phi_part", "#it{R}_{jet}^{part};#it{p}_{T,jet}^{part} (GeV/#it{c});#varphi_{jet tracks}^{part}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {160, -1.0, 7.}}});
+      registry.add("h3_jet_r_part_jet_pt_part_Dz_part", "#it{R}_{jet}^{part};#it{p}_{T,jet}^{part} (GeV/#it{c});z = #it{p}_{T,jet tracks}^{part} / #it{p}_{T,jet}^{part}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetPtAxis, {30, 0., 1.}}});
       registry.add("h_jet_phat_part", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
       registry.add("h_jet_ptcut_part", "p_{T} cut;p_{T,jet}^{part} (GeV/#it{c});N;entries", {HistType::kTH2F, {{300, 0, 300}, {20, 0, 5}}});
       registry.add("h_jet_phat_part_weighted", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
@@ -424,6 +426,7 @@ struct JetFinderQATask {
       registry.fill(HIST("h3_jet_r_jet_pt_track_pt"), jet.r() / 100.0, jet.pt(), constituent.pt(), weight);
       registry.fill(HIST("h3_jet_r_jet_pt_track_eta"), jet.r() / 100.0, jet.pt(), constituent.eta(), weight);
       registry.fill(HIST("h3_jet_r_jet_pt_track_phi"), jet.r() / 100.0, jet.pt(), constituent.phi(), weight);
+      registry.fill(HIST("h3_jet_r_jet_pt_Dz"), jet.r() / 100.0, jet.pt(), constituent.pt() / jet.pt(), weight);
     }
   }
   template <typename T, typename U>
@@ -605,6 +608,7 @@ struct JetFinderQATask {
       registry.fill(HIST("h3_jet_r_part_jet_pt_part_track_pt_part"), jet.r() / 100.0, jet.pt(), constituent.pt(), weight);
       registry.fill(HIST("h3_jet_r_part_jet_pt_part_track_eta_part"), jet.r() / 100.0, jet.pt(), constituent.eta(), weight);
       registry.fill(HIST("h3_jet_r_part_jet_pt_part_track_phi_part"), jet.r() / 100.0, jet.pt(), constituent.phi(), weight);
+      registry.fill(HIST("h3_jet_r_part_jet_pt_part_Dz_part"), jet.r() / 100.0, jet.pt(), constituent.pt() / jet.pt(), weight);
     }
   }
 
@@ -947,7 +951,8 @@ struct JetFinderQATask {
       if (!isAcceptedJet<JetTracks>(jet)) {
         continue;
       }
-      if(jet.eventWeight()==1) {
+      //LOG(info) << "isMB =  " << isMB << " event weight = " << jet.eventWeight();
+      if(!isMB && jet.eventWeight()==1) {
         continue;
       }
       double pTHat = 10. / (std::pow(jet.eventWeight(), 1.0 / pTHatExponent));
@@ -989,7 +994,7 @@ struct JetFinderQATask {
     if (!isAcceptedJet<JetParticles>(jet)) {
       return;
     }
-    if(jet.eventWeight()==1) {
+    if(!isMB && jet.eventWeight()==1) {
       return;
     }
     double pTHat = 10. / (std::pow(jet.eventWeight(), 1.0 / pTHatExponent));
@@ -1044,7 +1049,7 @@ struct JetFinderQATask {
       if (!isAcceptedJet<JetTracks>(mcdjet)) {
         continue;
       }
-      if(mcdjet.eventWeight()==1) {
+      if(!isMB && mcdjet.eventWeight()==1) {
         continue;
       }
       fillMatchedHistograms<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights>::iterator, soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents, aod::ChargedMCParticleLevelJetsMatchedToChargedMCDetectorLevelJets, aod::ChargedMCParticleLevelJetEventWeights>>(mcdjet, mcdjet.eventWeight());
@@ -1054,7 +1059,7 @@ struct JetFinderQATask {
 
   void processMCCollisionsWeighted(JetMcCollision const& collision)
   {
-    if(collision.weight()==1) {
+    if(!isMB && collision.weight()==1) {
       return;
     }
     registry.fill(HIST("h_collision_eventweight_part"), collision.weight());
@@ -1216,7 +1221,7 @@ struct JetFinderQATask {
                              soa::Filtered<soa::Join<JetTracks, aod::JTrackExtras, aod::JMcTrackLbs>> const& tracks)
   {
     float eventWeight = collision.mcCollision().weight();
-    if(eventWeight==1) {
+    if(!isMB && eventWeight==1) {
       return;
     }
     registry.fill(HIST("h_collisions"), 0.5);
