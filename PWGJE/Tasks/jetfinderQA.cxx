@@ -47,6 +47,9 @@ struct JetFinderQATask {
   HistogramRegistry registry;
 
   Preslice<JetTracks> perCol = aod::jtrack::collisionId;
+  Preslice<JetParticles> perColMC = aod::jmcparticle::mcCollisionId;
+  Preslice<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetEventWeights>> perColJets = aod::jet::collisionId;
+  Preslice<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights>> perColJetsMatched = aod::jet::collisionId;
 
   Configurable<float> selectedJetsRadius{"selectedJetsRadius", 0.4, "resolution parameter for histograms without radius"};
   Configurable<std::string> eventSelections{"eventSelections", "sel8", "choose event selection"};
@@ -75,6 +78,9 @@ struct JetFinderQATask {
   Configurable<int> trackOccupancyInTimeRangeMax{"trackOccupancyInTimeRangeMax", 999999, "maximum occupancy of tracks in neighbouring collisions in a given time range; only applied to reconstructed collisions (data and mcd jets), not mc collisions (mcp jets)"};
   Configurable<int> trackOccupancyInTimeRangeMin{"trackOccupancyInTimeRangeMin", -999999, "minimum occupancy of tracks in neighbouring collisions in a given time range; only applied to reconstructed collisions (data and mcd jets), not mc collisions (mcp jets)"};
   Configurable<bool> isMB{"isMB", false, "flag to choose events based on weight (MB = 1, weighted = anything else"};
+  Configurable<bool> isFillAmbiguous{"isFillAmbiguous", false, "flag to fill histograms checking ambiguous tracks"};
+  Configurable<float> diffNeighbours{"diffNeighbours", 999.0, "maximum difference in pThat between current collision and neighbours"};
+  Configurable<bool> isRejectHFNeighbours{"isRejectHFNeighbours", false, "reject neighbours with charm or beauty"};
 
   std::vector<bool> filledJetR_Both;
   std::vector<bool> filledJetR_Low;
@@ -134,7 +140,7 @@ struct JetFinderQATask {
     AxisSpec jetEtaAxis = {nBinsEta, jetEtaMin, jetEtaMax, "#eta"};
     AxisSpec trackEtaAxis = {nBinsEta, trackEtaMin, trackEtaMax, "#eta"};
 
-    if (doprocessJetsData || doprocessJetsMCD || doprocessJetsMCDWeighted) {
+    if (doprocessJetsData || doprocessJetsMCD || doprocessJetsMCDWeighted || doprocessTracksColl) {
       registry.add("h_jet_pt", "jet pT;#it{p}_{T,jet} (GeV/#it{c});entries", {HistType::kTH1F, {jetPtAxis}});
       registry.add("h_jet_eta", "jet #eta;#eta_{jet};entries", {HistType::kTH1F, {jetEtaAxis}});
       registry.add("h_jet_phi", "jet #varphi;#varphi_{jet};entries", {HistType::kTH1F, {{160, -1.0, 7.}}});
@@ -246,7 +252,7 @@ struct JetFinderQATask {
       registry.add("h_jet_phat_part_weighted", "jet #hat{p};#hat{p} (GeV/#it{c});entries", {HistType::kTH1F, {{1000, 0, 1000}}});
     }
 
-    if (doprocessJetsMCPMCDMatched || doprocessJetsMCPMCDMatchedWeighted || doprocessJetsSubMatched) {
+    if (doprocessJetsMCPMCDMatched || doprocessJetsMCPMCDMatchedWeighted || doprocessJetsSubMatched || doprocessTracksMatchedColl) {
       registry.add("h3_jet_r_jet_pt_tag_jet_pt_base_matchedgeo", "#it{R}_{jet};#it{p}_{T,jet}^{tag} (GeV/#it{c});#it{p}_{T,jet}^{base} (GeV/#it{c})", {HistType::kTH3F, {{jetRadiiBins, ""}, {300, 0., 300.}, {300, 0., 300.}}});
       registry.add("h3_jet_r_jet_eta_tag_jet_eta_base_matchedgeo", "#it{R}_{jet};#eta_{jet}^{tag};#eta_{jet}^{base}", {HistType::kTH3F, {{jetRadiiBins, ""}, jetEtaAxis, jetEtaAxis}});
       registry.add("h3_jet_r_jet_phi_tag_jet_phi_base_matchedgeo", "#it{R}_{jet};#varphi_{jet}^{tag};#varphi_{jet}^{base}", {HistType::kTH3F, {{jetRadiiBins, ""}, {160, -1.0, 7.}, {160, -1.0, 7.}}});
@@ -343,6 +349,21 @@ struct JetFinderQATask {
       registry.add("h_collisions_loop", "weight", {HistType::kTH1F, {{2, 0., 2.}}});
       registry.add("h_track_loop", "weight", {HistType::kTH1F, {{2, 0., 2.}}});
       registry.add("h_track_pt_loop", "weight track pt", {HistType::kTH1F, {{200, 0., 200.}}});
+      registry.add("h_track_pt_loop_outlier", "weight track pt", {HistType::kTH1F, {{200, 0., 200.}}});
+      registry.add("h2_pt_hat_track_pt_loop_outlier", "track; #hat{#it{p}_{T}} (GeV/#it{c});#it{p}_{T,track} (GeV/#it{c})", {HistType::kTH2F, {{600, 0, 600}, {150, 0, 300}}});
+      registry.add("h2_neighbour_pt_hat_outlier", "neighbour; distance from collision; #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH2F, {{15, -7.5, 7.5}, {600, 0, 600}}});
+      registry.add("h2_neighbour_track_pt_outlier", "neighbour; distance from collision; #it{p}_{T,track} (GeV/#it{c})", {HistType::kTH2F, {{15, -7.5, 7.5}, {200, 0, 100}}});
+      registry.add("h2_neighbour_pt_hat_all", "neighbour; distance from collision; #hat{#it{p}_{T}} (GeV/#it{c})", {HistType::kTH2F, {{15, -7.5, 7.5}, {600, 0, 600}}});
+      registry.add("h2_neighbour_track_pt_all", "neighbour; distance from collision; #it{p}_{T,track} (GeV/#it{c})", {HistType::kTH2F, {{15, -7.5, 7.5}, {200, 0, 100}}});
+      registry.add("h_pt_hat_track_pt_loop", "loop; #hat{#it{p}_{T}} (GeV/#it{c});#it{p}_{T,track} (GeV/#it{c})", {HistType::kTH2F, {{200,0,600}, {100,0,100}}});
+      registry.add("h_outlier_neighbours", "outlier", {HistType::kTH1F, {{2, 0., 2.}}});
+      registry.add("h_charm_neighbours", "charm neighbour", {HistType::kTH1F, {{2, 0., 2.}}});
+      registry.add("h_beauty_neighbours", "beauty neighbour", {HistType::kTH1F, {{2, 0., 2.}}});
+    }
+    if (doprocessTracksMatchedColl) {
+      registry.add("h_outlier_neighbours_matched", "outlier", {HistType::kTH1F, {{2, 0., 2.}}});
+      registry.add("h_charm_neighbours_matched", "charm neighbour", {HistType::kTH1F, {{2, 0., 2.}}});
+      registry.add("h_beauty_neighbours_matched", "beauty neighbour", {HistType::kTH1F, {{2, 0., 2.}}});
     }
   }
 
@@ -941,29 +962,88 @@ struct JetFinderQATask {
         continue;
       }
       fillHistograms(jet, collision.centrality(), collision.trackOccupancyInTimeRange());
-      fillHistogramsAmbiguous(jet, 1., tracksAmbiguous);
+      if(isFillAmbiguous) fillHistogramsAmbiguous(jet, 1., tracksAmbiguous);
     }
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsMCD, "jet finder QA mcd", false);
 
   void processTracksColl(soa::Join<JetCollisions, aod::JMcCollisionLbs> const& collisions, 
       JetMcCollisions const&,
-      JetTracks const& tracks)
+      JetParticles const& particles,
+      JetTracks const& tracks,
+      soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetEventWeights> const& jets, 
+      JetTracksMCD const&
+      )
   {
     for (auto const& collision : collisions) {
 
       registry.fill(HIST("h_collisions_loop"), 0.5);
       if (!jetderiveddatautilities::selectCollision(collision, eventSelection)) {
-        return;
+        continue;
       }
       registry.fill(HIST("h_collisions_loop"), 1.5);
       if (collision.trackOccupancyInTimeRange() < trackOccupancyInTimeRangeMin || trackOccupancyInTimeRangeMax < collision.trackOccupancyInTimeRange()) {
-        return;
+        continue;
       }
       float eventWeight = collision.mcCollision().weight();
+      double pTHat = 10. / (std::pow(eventWeight, 1.0 / pTHatExponent));
       const auto tracksColl = tracks.sliceBy(perCol, collision.globalIndex());
-      LOG(info) << "coll index = " << collision.globalIndex();
-      LOG(info) << "n tracks = " << tracksColl.size();
+      //LOG(info) << "coll index = " << collision.globalIndex();
+      //LOG(info) << "n tracks = " << tracksColl.size();
+      //
+      // find / reject outlier collisions
+      //
+      bool jetCollisionOK = true;
+      bool charmCollisionOK = true;
+      bool beautyCollisionOK = true;
+      for (auto const& collisionOutlier : collisions) { // find collisions closeby
+        float eventWeightOutlier = collisionOutlier.mcCollision().weight();
+        double pTHatOutlier = 10. / (std::pow(eventWeightOutlier, 1.0 / pTHatExponent));
+        int diffColl = collision.globalIndex() - collisionOutlier.globalIndex();
+
+        //LOG(info) << "collision global index = " << collision.globalIndex() << "outlier global index = "<< collisionOutlier.globalIndex();
+        if( diffColl > -5 && diffColl < 0) { // check 5 collisions prior
+          //LOG(info) << "pThat = " << pTHat << "pThat neighbour = "<<pTHatOutlier;
+          //if(pTHatOutlier - pTHat > diffNeighbours ) { 
+          //  // choose events that are close to the current event
+          //  // doesn't work as the rejection factor varies with the current event pThat
+          //  jetCollisionOK = false;
+          //  //break;
+          //}
+          if(pTHatOutlier > diffNeighbours ) { 
+            jetCollisionOK = false;
+          }
+
+          const auto particlesColl = particles.sliceBy(perColMC, collisionOutlier.globalIndex());
+          //LOG(info) << "Particles coll size = "<<particlesColl.size();
+          //LOG(info) << "Particles size = "<<particles.size();
+          for(auto const &particle : particlesColl) {
+            int pdgCode = particle.pdgCode();
+            //LOG(info) << "pdg code = "<<pdgCode;
+            if(std::abs(pdgCode) == 4) {
+              charmCollisionOK = false;
+            }
+            if(std::abs(pdgCode) == 5) {
+              beautyCollisionOK = false;
+            }
+          }
+        }
+      }
+      registry.fill(HIST("h_outlier_neighbours"), jetCollisionOK?1.5:0.5);
+      registry.fill(HIST("h_charm_neighbours"), charmCollisionOK?1.5:0.5);
+      registry.fill(HIST("h_beauty_neighbours"), beautyCollisionOK?1.5:0.5);
+      if(!jetCollisionOK) {
+        //LOG(info) << "outlier close by";
+        continue;
+      }
+      if(isRejectHFNeighbours && (!charmCollisionOK || !beautyCollisionOK)) {
+        continue;
+      }
+
+      // 
+      // Check Tracks
+      //
+
       for (auto const& track : tracksColl) {
 
         registry.fill(HIST("h_track_loop"), 0.5);
@@ -973,8 +1053,76 @@ struct JetFinderQATask {
         registry.fill(HIST("h_track_loop"), 1.5);
 
         registry.fill(HIST("h_track_pt_loop"), track.pt());
+        registry.fill(HIST("h_pt_hat_track_pt_loop"), pTHat, track.pt());
+
+        if(track.pt() < 100 && track.pt() > 1.5 * pTHat) { // high weight outlier track
+          registry.fill(HIST("h_track_pt_loop_outlier"), track.pt());
+          registry.fill(HIST("h2_pt_hat_track_pt_loop_outlier"),pTHat, track.pt());
+          for (auto const& collisionOutlier : collisions) { // find collisions closeby
+            float eventWeightOutlier = collisionOutlier.mcCollision().weight();
+            double pTHatOutlier = 10. / (std::pow(eventWeightOutlier, 1.0 / pTHatExponent));
+            int diffColl = collision.globalIndex() - collisionOutlier.globalIndex();
+
+            if(abs(diffColl) < 6) {
+
+              registry.fill(HIST("h2_neighbour_pt_hat_outlier"), float(diffColl+0.1), pTHatOutlier);
+              registry.fill(HIST("h2_neighbour_track_pt_outlier"), float(diffColl+0.1), track.pt());
+
+            }
+          }
+        }
+        // all
+        for (auto const& collisionOutlier : collisions) { // find collisions closeby
+          float eventWeightOutlier = collisionOutlier.mcCollision().weight();
+          double pTHatOutlier = 10. / (std::pow(eventWeightOutlier, 1.0 / pTHatExponent));
+          int diffColl = collision.globalIndex() - collisionOutlier.globalIndex();
+
+          if(abs(diffColl) < 6) {
+            //LOG(info) << "pThat = " << pTHat << "pThat neighbour = "<<pTHatOutlier;
+            registry.fill(HIST("h2_neighbour_pt_hat_all"), float(diffColl+0.1), pTHatOutlier);
+            registry.fill(HIST("h2_neighbour_track_pt_all"), float(diffColl+0.1), track.pt());
+          }
+        }
       }
-      // soa::Join<JetCollisions, aod::JMcCollisionLbs>::iterator const&
+      // 
+      // Check MC particles (search for c and b)
+      //
+      bool foundCharm = false;
+      bool foundBeauty= false;
+      const auto particlesColl = particles.sliceBy(perColMC, collision.globalIndex());
+      //LOG(info) << "Particles coll size = "<<particlesColl.size();
+      //LOG(info) << "Particles size = "<<particles.size();
+      for(auto const &particle : particlesColl) {
+        int pdgCode = particle.pdgCode();
+        //LOG(info) << "pdg code = "<<pdgCode;
+        if(std::abs(pdgCode) == 4) {
+          foundCharm = true;
+        }
+        if(std::abs(pdgCode) == 5) {
+          foundBeauty = true;
+        }
+      }
+      //LOG(info) << "Charm  = "<<foundCharm;
+      //LOG(info) << "Beauty = "<<foundBeauty;
+
+
+      //
+      // Jets
+      //
+      const auto jetsColl = jets.sliceBy(perColJets, collision.globalIndex());
+      for (auto const& jet : jetsColl) {
+        if (!jetfindingutilities::isInEtaAcceptance(jet, jetEtaMin, jetEtaMax, trackEtaMin, trackEtaMax)) {
+          continue;
+        }
+        if (!isAcceptedJet<JetTracks>(jet)) {
+          continue;
+        }
+        if(!isMB && jet.eventWeight()==1) {
+          continue;
+        }
+
+        fillHistograms(jet, collision.centrality(), collision.trackOccupancyInTimeRange(), jet.eventWeight());
+      }
     }
   }
   PROCESS_SWITCH(JetFinderQATask, processTracksColl, "jet finder QA mcd", false);
@@ -1009,7 +1157,7 @@ struct JetFinderQATask {
         }
       }
       fillHistograms(jet, collision.centrality(), collision.trackOccupancyInTimeRange(), jet.eventWeight());
-      fillHistogramsAmbiguous(jet, jet.eventWeight(), tracksAmbiguous);
+      if(isFillAmbiguous) fillHistogramsAmbiguous(jet, jet.eventWeight(), tracksAmbiguous);
     }
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsMCDWeighted, "jet finder QA mcd with weighted events", false);
@@ -1080,6 +1228,84 @@ struct JetFinderQATask {
     }
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsMCPMCDMatched, "jet finder QA matched mcp and mcd", false);
+
+
+  void processTracksMatchedColl(soa::Join<JetCollisions, aod::JMcCollisionLbs> const& collisions, 
+      JetMcCollisions const&,
+      soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights> const& mcdjets,
+      soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents, aod::ChargedMCParticleLevelJetsMatchedToChargedMCDetectorLevelJets, aod::ChargedMCParticleLevelJetEventWeights> const&,
+      JetParticles const& particles,
+      JetTracks const& tracks
+      )
+  {
+    for (auto const& collision : collisions) {
+
+      if (!jetderiveddatautilities::selectCollision(collision, eventSelection)) {
+        continue;
+      }
+      if (collision.trackOccupancyInTimeRange() < trackOccupancyInTimeRangeMin || trackOccupancyInTimeRangeMax < collision.trackOccupancyInTimeRange()) {
+        continue;
+      }
+      float eventWeight = collision.mcCollision().weight();
+      double pTHat = 10. / (std::pow(eventWeight, 1.0 / pTHatExponent));
+      const auto tracksColl = tracks.sliceBy(perCol, collision.globalIndex());
+      //
+      // find / reject outlier collisions
+      //
+      bool jetCollisionOK = true;
+      bool charmCollisionOK = true;
+      bool beautyCollisionOK = true;
+      //LOG(info) << "n collisions = "<<collisions.size();
+      for (auto const& collisionOutlier : collisions) { // find collisions closeby
+        float eventWeightOutlier = collisionOutlier.mcCollision().weight();
+        double pTHatOutlier = 10. / (std::pow(eventWeightOutlier, 1.0 / pTHatExponent));
+        int diffColl = collision.globalIndex() - collisionOutlier.globalIndex();
+        if( diffColl > -5 && diffColl < 0) { // check 5 collisions prior
+          if(pTHatOutlier > diffNeighbours ) { 
+            jetCollisionOK = false;
+          }
+          //LOG(info) << "particles size= "<<particles.size();
+          const auto particlesColl = particles.sliceBy(perColMC, collisionOutlier.globalIndex());
+          // LOG(info) << "particles coll size= "<<particlesColl.size();
+          for(auto const &particle : particlesColl) {
+            int pdgCode = particle.pdgCode();
+            if(std::abs(pdgCode) == 4) {
+              charmCollisionOK = false;
+            }
+            if(std::abs(pdgCode) == 5) {
+              beautyCollisionOK = false;
+            }
+          }
+        }
+      }
+      registry.fill(HIST("h_outlier_neighbours_matched"), jetCollisionOK?1.5:0.5);
+      registry.fill(HIST("h_charm_neighbours_matched"), charmCollisionOK?1.5:0.5);
+      registry.fill(HIST("h_beauty_neighbours_matched"), beautyCollisionOK?1.5:0.5);
+      if(!jetCollisionOK) {
+        continue;
+      }
+      if(isRejectHFNeighbours && (!charmCollisionOK || !beautyCollisionOK)) {
+        continue;
+      }
+
+      const auto mcdjetsColl = mcdjets.sliceBy(perColJetsMatched, collision.globalIndex());
+      for (auto const& mcdjet : mcdjetsColl) {
+        //  for (const auto& mcdjet : mcdjets) {
+        if (!jetfindingutilities::isInEtaAcceptance(mcdjet, jetEtaMin, jetEtaMax, trackEtaMin, trackEtaMax)) {
+          continue;
+        }
+        if (!isAcceptedJet<JetTracks>(mcdjet)) {
+          continue;
+        }
+        if(!isMB && mcdjet.eventWeight()==1) {
+          continue;
+        }
+        fillMatchedHistograms<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights>::iterator, soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents, aod::ChargedMCParticleLevelJetsMatchedToChargedMCDetectorLevelJets, aod::ChargedMCParticleLevelJetEventWeights>>(mcdjet, mcdjet.eventWeight());
+      }
+    }
+  }
+  PROCESS_SWITCH(JetFinderQATask, processTracksMatchedColl, "jet finder QA matched mcp and mcd with weighted events, neighbour rejection", false);
+
 
   void processJetsMCPMCDMatchedWeighted(soa::Filtered<JetCollisions>::iterator const& collision,
                                         soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights> const& mcdjets,
