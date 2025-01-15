@@ -828,7 +828,7 @@ struct JetFinderQATask {
       if (!isAcceptedJet<aod::JetTracks>(jet)) {
         continue;
       }
-      if(rejectMbEvents && jet.eventWeight()==1) {
+      if (rejectMbEvents && jet.eventWeight() == 1) {
         continue;
       }
       double pTHat = 10. / (std::pow(jet.eventWeight(), 1.0 / pTHatExponent));
@@ -869,7 +869,7 @@ struct JetFinderQATask {
     if (!isAcceptedJet<aod::JetParticles>(jet)) {
       return;
     }
-    if(rejectMbEvents && jet.eventWeight()==1) {
+    if (rejectMbEvents && jet.eventWeight() == 1) {
       return;
     }
     double pTHat = 10. / (std::pow(jet.eventWeight(), 1.0 / pTHatExponent));
@@ -880,7 +880,7 @@ struct JetFinderQATask {
     }
     if (checkMcCollisionIsMatched) {
       auto collisionspermcpjet = collisions.sliceBy(CollisionsPerMCPCollision, jet.mcCollisionId());
-      if (collisionspermcpjet.size() >= 1  && jetderiveddatautilities::selectCollision(collisionspermcpjet.begin(), eventSelection)) {
+      if (collisionspermcpjet.size() >= 1 && jetderiveddatautilities::selectCollision(collisionspermcpjet.begin(), eventSelection)) {
         fillMCPHistograms(jet, jet.eventWeight());
       }
     } else {
@@ -924,7 +924,7 @@ struct JetFinderQATask {
       if (!isAcceptedJet<aod::JetTracks>(mcdjet)) {
         continue;
       }
-      if(rejectMbEvents && mcdjet.eventWeight()==1) {
+      if (rejectMbEvents && mcdjet.eventWeight() == 1) {
         continue;
       }
       fillMatchedHistograms<soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetsMatchedToChargedMCParticleLevelJets, aod::ChargedMCDetectorLevelJetEventWeights>::iterator, soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents, aod::ChargedMCParticleLevelJetsMatchedToChargedMCDetectorLevelJets, aod::ChargedMCParticleLevelJetEventWeights>>(mcdjet, mcdjet.eventWeight());
@@ -934,7 +934,7 @@ struct JetFinderQATask {
 
   void processMCCollisionsWeighted(aod::JetMcCollision const& collision)
   {
-    if(rejectMbEvents && collision.weight()==1) {
+    if (rejectMbEvents && collision.weight() == 1) {
       return;
     }
     registry.fill(HIST("h_collision_eventweight_part"), collision.weight());
@@ -1091,7 +1091,7 @@ struct JetFinderQATask {
                              soa::Filtered<soa::Join<aod::JetTracks, aod::JTrackExtras>> const& tracks)
   {
     float eventWeight = collision.mcCollision().weight();
-    if(rejectMbEvents && eventWeight==1) {
+    if (rejectMbEvents && eventWeight == 1) {
       return;
     }
     registry.fill(HIST("h_collisions"), 0.5);
