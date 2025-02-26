@@ -421,7 +421,7 @@ struct JetDerivedDataWriter {
     mcCollisionMapping.resize(mcCollisions.size(), -1);
     for (auto const& mcCollision : mcCollisions) {
       if (mcCollision.isMcCollisionSelected()) {
-        products.storedJMcCollisionsTable(mcCollision.posX(), mcCollision.posY(), mcCollision.posZ(), mcCollision.weight(), mcCollision.subGeneratorId(), 1, 1, 1.0, 1.0 );
+        products.storedJMcCollisionsTable(mcCollision.posX(), mcCollision.posY(), mcCollision.posZ(), mcCollision.weight(), mcCollision.subGeneratorId(), 1, 1, 1.0, 1.0);
         products.storedJMcCollisionsParentIndexTable(mcCollision.mcCollisionId());
         mcCollisionMapping[mcCollision.globalIndex()] = products.storedJMcCollisionsTable.lastIndex();
       }
@@ -442,7 +442,6 @@ struct JetDerivedDataWriter {
     }
   }
   PROCESS_SWITCH(JetDerivedDataWriter, processMcCollisionsWithXsection, "write out mcCollision output tables with cross section information", false);
-
 
   void processMcParticles(soa::Join<aod::JMcCollisions, aod::JMcCollisionSelections> const& mcCollisions, soa::Join<aod::JMcParticles, aod::JMcParticlePIs> const& particles)
   {
