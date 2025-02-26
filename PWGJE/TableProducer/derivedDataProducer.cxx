@@ -236,9 +236,9 @@ struct JetDerivedDataProducerTask {
   }
   PROCESS_SWITCH(JetDerivedDataProducerTask, processMcCollisionLabels, "produces derived MC collision labels table", false);
 
-  void processMcCollisions(aod::McCollision const& mcCollision)
+  void processMcCollisions(soa::Join<aod::McCollisions, aod::HepMCXSections>::iterator const& mcCollision)
   {
-    products.jMcCollisionsTable(mcCollision.posX(), mcCollision.posY(), mcCollision.posZ(), mcCollision.weight(), mcCollision.getSubGeneratorId());
+    products.jMcCollisionsTable(mcCollision.posX(), mcCollision.posY(), mcCollision.posZ(), mcCollision.weight(), mcCollision.getSubGeneratorId(), mcCollision.accepted(), mcCollision.attempted(), mcCollision.xsectGen(), mcCollision.xsectErr());
     products.jMcCollisionsParentIndexTable(mcCollision.globalIndex());
   }
   PROCESS_SWITCH(JetDerivedDataProducerTask, processMcCollisions, "produces derived MC collision table", false);

@@ -422,7 +422,7 @@ struct JetDerivedDataWriter {
     for (auto const& mcCollision : mcCollisions) {
       if (mcCollision.isMcCollisionSelected()) {
 
-        products.storedJMcCollisionsTable(mcCollision.posX(), mcCollision.posY(), mcCollision.posZ(), mcCollision.weight(), mcCollision.subGeneratorId());
+        products.storedJMcCollisionsTable(mcCollision.posX(), mcCollision.posY(), mcCollision.posZ(), mcCollision.weight(), mcCollision.subGeneratorId(), mcCollision.accepted(), mcCollision.attempted(), mcCollision.xsectGen(), mcCollision.xsectErr());
         products.storedJMcCollisionsParentIndexTable(mcCollision.mcCollisionId());
         mcCollisionMapping[mcCollision.globalIndex()] = products.storedJMcCollisionsTable.lastIndex();
       }
