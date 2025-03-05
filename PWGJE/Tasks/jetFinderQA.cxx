@@ -578,7 +578,6 @@ struct JetFinderQATask {
           registry.fill(HIST("h3_jet_pt_tag_jet_phi_tag_jet_phi_base_matchedgeo"), jetTag.pt(), jetTag.phi(), jetBase.phi(), weight);
           registry.fill(HIST("h3_jet_pt_tag_jet_ntracks_tag_jet_ntracks_base_matchedgeo"), jetTag.pt(), jetTag.tracksIds().size(), jetBase.tracksIds().size(), weight);
           registry.fill(HIST("h3_jet_pt_tag_jet_leadingtrack_pt_tag_jet_leadingtrack_pt_base_matchedgeo"), jetTag.pt(), leadingTrackPtTag, leadingTrackPtBase, weight);
-
         }
       }
     }
