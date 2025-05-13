@@ -725,7 +725,8 @@ struct JetHadronRecoil {
   PROCESS_SWITCH(JetHadronRecoil, processRecoilJetsMCPMCDMatchedWeighted, "process MC matched with event weights (recoil jets)", false);
 
   template <typename T, typename U, typename X>
-  double getWTAaxisDifference(T const& jet, U const& jetsWTA, X const& /*tracks or particles*/, bool isMatched = false) {
+  double getWTAaxisDifference(T const& jet, U const& jetsWTA, X const& /*tracks or particles*/, bool isMatched = false)
+  {
     double deltaPhi;
     double deltaEta;
     double deltaY;
@@ -749,7 +750,7 @@ struct JetHadronRecoil {
           dR = RecoDecay::sqrtSumOfSquares(deltaPhi, deltaEta);
         }
       }
-    } else if(wtaMethod == 1) {
+    } else if (wtaMethod == 1) {
       // recluster jet
       jetConstituents.clear();
       for (auto& jetConstituent : jet.template tracks_as<X>()) {
@@ -762,8 +763,8 @@ struct JetHadronRecoil {
       deltaPhi = RecoDecay::constrainAngle(jet.phi() - jetReclustered[0].phi(), -o2::constants::math::PI);
       deltaY = jet.y() - jetReclustered[0].rap();
       dR = RecoDecay::sqrtSumOfSquares(deltaPhi, deltaY);
-      LOG(debug) << "orig. jet n const = " << jet.tracksIds().size() << " pt = "<< jet.pt() << " eta = " << jet.eta() << " phi = " << jet.phi();
-      LOG(debug) << "recl. jet n const = " << clusterSeq.constituents(jetReclustered[0]).size() << " pt = "<< jetReclustered[0].pt() << " eta = " << jetReclustered[0].eta() << " phi = " << jetReclustered[0].phi();
+      LOG(debug) << "orig. jet n const = " << jet.tracksIds().size() << " pt = " << jet.pt() << " eta = " << jet.eta() << " phi = " << jet.phi();
+      LOG(debug) << "recl. jet n const = " << clusterSeq.constituents(jetReclustered[0]).size() << " pt = " << jetReclustered[0].pt() << " eta = " << jetReclustered[0].eta() << " phi = " << jetReclustered[0].phi();
       LOG(debug) << "distance = " << dR;
     }
     return dR;
