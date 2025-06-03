@@ -73,6 +73,7 @@ DECLARE_SOA_COLUMN(CentralityVariant1, centralityVariant1, float);
 DECLARE_SOA_COLUMN(HadronicRate, hadronicRate, float);
 DECLARE_SOA_COLUMN(Weight, weight, float);
 DECLARE_SOA_COLUMN(SubGeneratorId, subGeneratorId, int);
+DECLARE_SOA_COLUMN(PtHard, ptHard, float);
 DECLARE_SOA_COLUMN(EventSel, eventSel, uint16_t);
 DECLARE_SOA_BITMAP_COLUMN(Alias, alias, 32);
 DECLARE_SOA_COLUMN(TrackOccupancyInTimeRange, trackOccupancyInTimeRange, int);
@@ -116,7 +117,8 @@ using StoredJCollision = StoredJCollisions::iterator;
 
 DECLARE_SOA_TABLE_STAGED(JCollisionMcInfos, "JCOLLISIONMCINFO",
                          jcollision::Weight,
-                         jcollision::SubGeneratorId);
+                         jcollision::SubGeneratorId,
+                         jcollision::PtHard);
 
 DECLARE_SOA_TABLE_STAGED(JEMCCollisionLbs, "JEMCCOLLISIONLB",
                          jcollision::IsAmbiguous,
@@ -166,6 +168,7 @@ DECLARE_SOA_COLUMN(Accepted, accepted, uint64_t);
 DECLARE_SOA_COLUMN(Attempted, attempted, uint64_t);
 DECLARE_SOA_COLUMN(XsectGen, xsectGen, float);
 DECLARE_SOA_COLUMN(XsectErr, xsectErr, float);
+DECLARE_SOA_COLUMN(PtHard, ptHard, float);
 } // namespace jmccollision
 DECLARE_SOA_TABLE_STAGED(JMcCollisions, "JMCCOLLISION",
                          o2::soa::Index<>,
@@ -177,7 +180,8 @@ DECLARE_SOA_TABLE_STAGED(JMcCollisions, "JMCCOLLISION",
                          jmccollision::Accepted,
                          jmccollision::Attempted,
                          jmccollision::XsectGen,
-                         jmccollision::XsectErr);
+                         jmccollision::XsectErr,
+                         jmccollision::PtHard);
 
 using JMcCollision = JMcCollisions::iterator;
 using StoredJMcCollision = StoredJMcCollisions::iterator;

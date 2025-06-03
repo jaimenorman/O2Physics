@@ -274,7 +274,7 @@ bool analyseV0s(std::vector<fastjet::PseudoJet>& inputParticles, T const& v0s, f
  * @param doHFJetFinding set whether only jets containing a HF candidate are saved
  */
 template <typename T, typename U, typename V>
-void findJets(JetFinder& jetFinder, std::vector<fastjet::PseudoJet>& inputParticles, float jetPtMin, float jetPtMax, std::vector<double> jetRadius, float jetAreaFractionMin, T const& collision, U& jetsTable, V& constituentsTable, std::shared_ptr<THn> thnSparseJet, bool fillThnSparse, bool doCandidateJetFinding = false)
+void findJets(JetFinder& jetFinder, std::vector<fastjet::PseudoJet>& inputParticles, float jetPtMin, float jetPtMax, std::vector<double> jetRadius, float jetAreaFractionMin, T const& collision, U& jetsTable, V& constituentsTable, std::shared_ptr<THn> thnSparseJet, bool fillThnSparse, bool doCandidateJetFinding = false, float jetPtHatMax = 999)
 {
   auto jetRValues = static_cast<std::vector<double>>(jetRadius);
   jetFinder.jetPtMin = jetPtMin;
@@ -283,6 +283,12 @@ void findJets(JetFinder& jetFinder, std::vector<fastjet::PseudoJet>& inputPartic
     jetFinder.jetR = R;
     std::vector<fastjet::PseudoJet> jets;
     fastjet::ClusterSequenceArea clusterSeq(jetFinder.findJets(inputParticles, jets));
+    if(!jets.empty()) {
+      float jetPtHighestInEvent = jets[0].pt(); // jets returned by ClusterSequenceArea is sorted by pt
+      if (jetPtHighestInEvent > jetPtHatMax * collision.ptHard()) {
+        continue; // reject outlier events
+      }
+    }
     for (const auto& jet : jets) {
       if (jet.has_area() && jet.area() < jetAreaFractionMin * M_PI * R * R) {
         continue;
