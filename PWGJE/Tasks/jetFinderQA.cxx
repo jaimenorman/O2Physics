@@ -903,11 +903,12 @@ struct JetFinderQATask {
   }
   PROCESS_SWITCH(JetFinderQATask, processJetsMCD, "jet finder QA mcd", false);
 
-  void processJetsMCDWeighted(soa::Filtered<aod::JetCollisions>::iterator const& collision, soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetEventWeights> const& jets, aod::JetTracks const&)
+  void processJetsMCDWeighted(soa::Filtered<soa::Join<aod::JetCollisions, aod::JCollisionsOutliers>>::iterator const& collision, soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents, aod::ChargedMCDetectorLevelJetEventWeights> const& jets, aod::JetTracks const&)
   {
     if (collision.trackOccupancyInTimeRange() < trackOccupancyInTimeRangeMin || trackOccupancyInTimeRangeMax < collision.trackOccupancyInTimeRange()) {
       return;
     }
+    LOG(info) << "lead jet pt hat fraction = " << collision.leadJetPtHatFraction() << " lead track pt hat fraction = " << collision.leadTrackPtHatFraction();
     for (auto const& jet : jets) {
       if (!jetfindingutilities::isInEtaAcceptance(jet, jetEtaMin, jetEtaMax, trackEtaMin, trackEtaMax)) {
         continue;

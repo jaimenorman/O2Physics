@@ -156,6 +156,34 @@ DECLARE_SOA_TABLE_STAGED(CollisionCounts, "COLLCOUNT",
                          jcollision::ReadCountsWithTVXAndZVertexAndSel7KINT7,
                          jcollision::ReadCountsWithCustom);
 
+namespace jcollisionoutliers
+{
+DECLARE_SOA_INDEX_COLUMN(Collision, collision);
+DECLARE_SOA_COLUMN(LeadJetPtHatFraction, leadJetPtHatFraction, float);
+DECLARE_SOA_COLUMN(LeadTrackPtHatFraction, leadTrackPtHatFraction, float);
+}
+
+DECLARE_SOA_TABLE(JCollisionsOutliers, "AOD", "JCOLLISIONSOUTLIERS",
+                         jcollisionoutliers::CollisionId,
+                         jcollisionoutliers::LeadJetPtHatFraction,
+                         jcollisionoutliers::LeadTrackPtHatFraction);
+
+using JCollisionOutlier = JCollisionsOutliers::iterator;
+
+
+//namespace FullMCDetectorLeveleventweights
+//{
+//  DECLARE_SOA_INDEX_COLUMN(FullMCDetectorLevelJet, jet);
+//  DECLARE_SOA_COLUMN(EventWeight, eventWeight, float);
+//}
+//
+//DECLARE_SOA_TABLE(FullMCDetectorLevelJetEventWeights, "AOD", "FDJETMW",
+//    FullMCDetectorLeveleventweights::FullMCDetectorLevelJetId,
+//    FullMCDetectorLeveleventweights::EventWeight);
+//
+//using FullMCDetectorLevelJetEventWeight = FullMCDetectorLevelJetEventWeights::iterator;
+
+
 namespace jmccollision
 {
 DECLARE_SOA_INDEX_COLUMN(McCollision, mcCollision);
