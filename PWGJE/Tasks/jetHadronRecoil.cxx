@@ -228,10 +228,9 @@ struct JetHadronRecoil {
         continue;
       }
       if (track.pt() > pTHatTrackMaxMCD * pTHat) {
-        if(outlierRejectEvent) {
+        if (outlierRejectEvent) {
           return;
-        }
-        else {
+        } else {
           continue;
         }
       }
@@ -276,10 +275,9 @@ struct JetHadronRecoil {
     }
     for (const auto& jet : jets) {
       if (jet.pt() > pTHatMaxMCD * pTHat) {
-        if(outlierRejectEvent) {
+        if (outlierRejectEvent) {
           return;
-        }
-        else {
+        } else {
           continue;
         }
       }
@@ -358,10 +356,9 @@ struct JetHadronRecoil {
 
     for (const auto& particle : particles) {
       if (particle.pt() > pTHatTrackMaxMCD * pTHat) {
-        if(outlierRejectEvent) {
+        if (outlierRejectEvent) {
           return;
-        }
-        else {
+        } else {
           continue;
         }
       }
@@ -407,10 +404,9 @@ struct JetHadronRecoil {
 
     for (const auto& jet : jets) {
       if (jet.pt() > pTHatMaxMCP * pTHat) {
-        if(outlierRejectEvent) {
+        if (outlierRejectEvent) {
           return;
-        }
-        else {
+        } else {
           continue;
         }
       }
@@ -464,10 +460,9 @@ struct JetHadronRecoil {
       double dRp = 0;
 
       if (jetBase.pt() > pTHatMaxMCD * pTHat) {
-        if(outlierRejectEvent) {
+        if (outlierRejectEvent) {
           return;
-        }
-        else {
+        } else {
           continue;
         }
       }
@@ -477,10 +472,9 @@ struct JetHadronRecoil {
       if (jetBase.has_matchedJetGeo()) {
         for (const auto& jetTag : jetBase.template matchedJetGeo_as<std::decay_t<U>>()) {
           if (jetTag.pt() > pTHatMaxMCP * pTHat) {
-            if(outlierRejectEvent) {
+            if (outlierRejectEvent) {
               return;
-            }
-            else {
+            } else {
               continue;
             }
           }
@@ -519,10 +513,9 @@ struct JetHadronRecoil {
         continue;
       }
       if (track.pt() > pTHatTrackMaxMCD * pTHat) {
-        if(outlierRejectEvent) {
+        if (outlierRejectEvent) {
           return;
-        }
-        else {
+        } else {
           continue;
         }
       }
@@ -547,10 +540,9 @@ struct JetHadronRecoil {
       double dRp = 0;
 
       if (jetBase.pt() > pTHatMaxMCD * pTHat) {
-        if(outlierRejectEvent) {
+        if (outlierRejectEvent) {
           return;
-        }
-        else {
+        } else {
           continue;
         }
       }
@@ -561,10 +553,9 @@ struct JetHadronRecoil {
       if (jetBase.has_matchedJetGeo()) {
         for (const auto& jetTag : jetBase.template matchedJetGeo_as<std::decay_t<U>>()) {
           if (jetTag.pt() > pTHatMaxMCP * pTHat) {
-            if(outlierRejectEvent) {
+            if (outlierRejectEvent) {
               return;
-            }
-            else {
+            } else {
               continue;
             }
           }
