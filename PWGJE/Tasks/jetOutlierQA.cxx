@@ -113,7 +113,7 @@ struct JetOutlierQATask {
       }
     }
     std::vector<double> pThatBinning = {0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0,
-                                      3.25, 3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 20.0, 30.0};
+                                        3.25, 3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 20.0, 30.0};
 
     AxisSpec jetPtAxis = {jetPtBins, "#it{p}_{T} (GeV/#it{c})"};
     AxisSpec pThatAxis = {pThatBinning, "p_{T} / #hat{p_{T}}"};
@@ -699,7 +699,7 @@ struct JetOutlierQATask {
         registry.fill(HIST("h_track_pt_eta_accepted"), track.pt(), track.eta(), weight);
         registry.fill(HIST("h_track_pt_phi_accepted"), track.pt(), track.phi(), weight);
         registry.fill(HIST("h_pt_hard_track_pt_accepted"), pTHat != 0.0 ? track.pt() / pTHat : 0.0, track.pt(), weight);
-        
+
         if (!isOutlierEventDifferentJJCollision) {
           registry.fill(HIST("h_track_pt_accepted_no_JJ_outlier"), track.pt(), weight);
           registry.fill(HIST("h_track_pt_eta_accepted_no_JJ_outlier"), track.pt(), track.eta(), weight);
