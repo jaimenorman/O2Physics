@@ -692,12 +692,11 @@ struct JetOutlierQATask {
           int mcCollisionIDcoll = collision.mcCollisionId(); // Get the corresponding MC collision ID from the reco collision
           int mcCollisionIDOutlier = mcParticleOutlier.mcCollisionId();
           // include selection on pThat of particle
-          if(mcParticleOutlier.pt() < pTHatMaxMCP * pTHat) {
+          if (mcParticleOutlier.pt() < pTHatMaxMCP * pTHat) {
             registry.fill(HIST("h_track_pt_same_collision_cut_particle"), track.pt(), weight);
             registry.fill(HIST("h_pt_hard_track_pt_same_collision_cut_particle"), pTHat != 0.0 ? track.pt() / pTHat : 0.0, track.pt(), weight);
           }
-        }
-        else {
+        } else {
           registry.fill(HIST("h_track_pt_same_collision_rejected"), track.pt(), weight);
         }
         // fill tracks for events which have no JJ outlier tracks from different events
@@ -706,8 +705,7 @@ struct JetOutlierQATask {
           registry.fill(HIST("h_track_pt_eta_no_JJ_different"), track.pt(), track.eta(), weight);
           registry.fill(HIST("h_track_pt_phi_no_JJ_different"), track.pt(), track.phi(), weight);
           registry.fill(HIST("h2_collision_ID_difference_no_JJ_different"), pTHat, float(outlierCollisionIDDifference));
-        }
-        else {
+        } else {
           registry.fill(HIST("h_track_pt_no_JJ_different_rejected"), track.pt(), weight);
         }
         // collision checks for all tracks
